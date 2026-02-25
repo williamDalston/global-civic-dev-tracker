@@ -1,0 +1,44 @@
+[
+  {
+    "id": "100001",
+    "permit_": "100734456",
+    "permit_status": "ISSUE",
+    "permit_type": "PERMIT - NEW CONSTRUCTION",
+    "issue_date": "2024-09-01T00:00:00.000",
+    "application_start_date": "2024-07-01T00:00:00.000",
+    "work_description": "ERECT A 3-STORY, 6-UNIT RESIDENTIAL BUILDING",
+    "street_number": "2345",
+    "street_direction": "N",
+    "street_name": "MILWAUKEE",
+    "suffix": "AVE",
+    "latitude": "41.9236",
+    "longitude": "-87.7066",
+    "reported_cost": "1200000",
+    "community_area": "22",
+    "ward": "35"
+  },
+  {
+    "permit_": "100845678",
+    "permit_status": "RECEIVED",
+    "permit_type": "PERMIT - RENOVATION/ALTERATION",
+    "work_description": "INTERIOR RENOVATION OF SINGLE FAMILY HOME",
+    "street_number": "1456",
+    "street_name": "DAMEN",
+    "suffix": "AVE",
+    "reported_cost": "85000"
+  },
+  {
+    "permit_": "100923456",
+    "permit_type": "PERMIT - WRECKING/DEMOLITION",
+    "permit_status": "ISSUE",
+    "street_number": "567",
+    "street_direction": "W",
+    "street_name": "DIVISION",
+    "suffix": "ST",
+    "reported_cost": "35000"
+  },
+  {
+    "id": null,
+    "permit_": null
+  }
+]

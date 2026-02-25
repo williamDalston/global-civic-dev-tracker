@@ -1,0 +1,48 @@
+[
+  {
+    "permit_id": "B2401234",
+    "issue_date": "2024-06-15T00:00:00.000",
+    "application_date": "2024-05-01T00:00:00.000",
+    "full_address": "1234 14TH ST NW",
+    "desc_of_work": "Interior renovation of kitchen and two bathrooms on 2nd floor",
+    "permit_type_name": "ALTERATION AND REPAIR",
+    "permit_subtype_name": "ALTERATION & REPAIR",
+    "permit_category_name": "SUPPLEMENTAL",
+    "application_status_name": "PERMIT ISSUED",
+    "estimated_cost": "75000",
+    "latitude": 38.9120,
+    "longitude": -77.0320,
+    "ssl": "0123 0456"
+  },
+  {
+    "permit_id": "B2405678",
+    "issue_date": "2024-07-20T00:00:00.000",
+    "full_address": "4567 WISCONSIN AVE NW",
+    "desc_of_work": "New single family dwelling, 3 stories",
+    "permit_type_name": "NEW BUILDING",
+    "permit_category_name": "CONSTRUCTION",
+    "application_status_name": "UNDER REVIEW",
+    "estimated_cost": "450000",
+    "latitude": 38.9410,
+    "longitude": -77.0715
+  },
+  {
+    "permit_id": "B2400099",
+    "full_address": "789 H ST NE",
+    "permit_type_name": "RAZE",
+    "permit_category_name": "DEMOLITION",
+    "application_status_name": "PERMIT ISSUED",
+    "estimated_cost": "25000"
+  },
+  {
+    "dcra_internal_number": "ELEC-2024-001",
+    "full_address": "321 GEORGIA AVE NW",
+    "desc_of_work": "Upgrade electrical panel from 100A to 200A",
+    "permit_type_name": "ELECTRICAL",
+    "application_status_name": "COMPLETED"
+  },
+  {
+    "permit_id": null,
+    "full_address": null
+  }
+]

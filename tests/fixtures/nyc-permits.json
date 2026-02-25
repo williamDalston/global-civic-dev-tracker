@@ -1,0 +1,45 @@
+[
+  {
+    "job_number": "121234567",
+    "job_type": "A1",
+    "job_description": "INTERIOR RENOVATION OF APARTMENT UNIT",
+    "issued_date": "2024-08-01T00:00:00.000",
+    "filing_date": "2024-06-15T00:00:00.000",
+    "borough": "1",
+    "house_no": "123",
+    "street_name": "BROADWAY",
+    "zip": "10007",
+    "gis_latitude": "40.7128",
+    "gis_longitude": "-74.0060",
+    "estimated_job_costs": "150000"
+  },
+  {
+    "job_number": "320001234",
+    "job_type": "NB",
+    "job_description": "NEW 8 STORY MIXED USE BUILDING",
+    "issued_date": "2024-07-15T00:00:00.000",
+    "borough": "BROOKLYN",
+    "house_no": "456",
+    "street_name": "ATLANTIC AVE",
+    "zip": "11217",
+    "gis_latitude": "40.6862",
+    "gis_longitude": "-73.9776",
+    "estimated_job_costs": "5000000"
+  },
+  {
+    "job_number": "401234567",
+    "job_type": "DM",
+    "job_description": "FULL DEMOLITION OF 2 STORY BUILDING",
+    "borough": "4",
+    "house_no": "78",
+    "street_name": "MAIN ST",
+    "zip": "11354"
+  },
+  {
+    "job_number": null
+  },
+  {
+    "job_number": "500123",
+    "borough": "1"
+  }
+]
