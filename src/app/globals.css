@@ -21,13 +21,15 @@
   --radius: 0.5rem;
   --success: 142 76% 36%;
   --warning: 38 92% 50%;
+  --cta: 38 92% 50%;
+  --cta-foreground: 0 0% 100%;
 }
 
 .dark {
   --background: 222 47% 5%;
   --foreground: 210 40% 98%;
   --muted: 217 33% 12%;
-  --muted-foreground: 215 20% 55%;
+  --muted-foreground: 215 20% 70%;
   --card: 222 47% 7%;
   --card-foreground: 210 40% 98%;
   --border: 217 33% 17%;
@@ -43,6 +45,8 @@
   --ring: 224 76% 48%;
   --success: 142 70% 45%;
   --warning: 38 92% 50%;
+  --cta: 38 92% 50%;
+  --cta-foreground: 0 0% 100%;
 }
 
 @theme inline {
@@ -65,6 +69,8 @@
   --color-ring: hsl(var(--ring));
   --color-success: hsl(var(--success));
   --color-warning: hsl(var(--warning));
+  --color-cta: hsl(var(--cta));
+  --color-cta-foreground: hsl(var(--cta-foreground));
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -188,6 +194,34 @@ body {
 .delay-4 { animation-delay: 300ms; }
 .delay-5 { animation-delay: 375ms; }
 
+/* ─── Reduced Motion ─────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-slide-in-right,
+  .animate-float,
+  .animate-gradient,
+  .animate-shimmer,
+  .animate-pulse-glow,
+  .gradient-text,
+  .stat-value,
+  .grid-pattern {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .card-hover-lift {
+    transition: none !important;
+  }
+
+  .card-glow-border::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /* ─── Gradient Text ───────────────────────────────────────── */
 
 .gradient-text {
@@ -293,4 +327,24 @@ body {
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.3);
+}
+
+/* ─── Print Styles ───────────────────────────────────────── */
+
+@media print {
+  header,
+  footer,
+  .fixed {
+    display: none !important;
+  }
+
+  .card-hover-lift {
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
 }

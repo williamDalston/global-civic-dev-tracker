@@ -7,6 +7,8 @@ import { JsonLd, buildBreadcrumbJsonLd } from '@/components/seo/json-ld';
 import { PermitCard } from '@/components/permits/permit-card';
 import { DynamicNeighborhoodMap } from '@/components/maps/dynamic-map';
 import { DynamicCategoryChart, DynamicTrendChart } from '@/components/charts/dynamic-charts';
+import { CTABanner } from '@/components/lead-generation/cta-banner';
+import { AdSlot } from '@/components/ads/ad-slot';
 import { COUNTRIES } from '@/lib/config/countries';
 import { CITIES } from '@/lib/config/cities';
 import { SITE_URL, PERMIT_CATEGORIES } from '@/lib/config/constants';
@@ -19,6 +21,8 @@ import {
   getCategoryStats,
   getMonthlyTrend,
 } from '@/lib/db/queries/permits';
+import { getCitySyncState } from '@/lib/db/queries/admin';
+import { formatRelativeTime } from '@/lib/utils/format';
 import { buildCityMeta } from '@/lib/seo/meta';
 import { buildCityHubSchema } from '@/lib/seo/structured-data';
 
@@ -56,27 +60,28 @@ export default async function CityPage({ params }: Props) {
   const cityId = dbCity?.id ?? null;
 
   // DB queries — only if we resolved the cityId
-  const [neighborhoods, recentPermits, totalPermits, categoryStats, monthlyTrend] = cityId
+  const [neighborhoods, recentPermits, totalPermits, categoryStats, monthlyTrend, syncState] = cityId
     ? await Promise.all([
         safeQuery(() => getNeighborhoodsWithCounts(cityId)),
         safeQuery(() => getRecentPermits(cityId, 6)),
         safeQuery(() => getPermitCountByCity(cityId)),
         safeQuery(() => getCategoryStats(cityId)),
         safeQuery(() => getMonthlyTrend(cityId, 12)),
+        safeQuery(() => getCitySyncState(cityId)),
       ])
-    : [null, null, null, null, null];
+    : [null, null, null, null, null, null];
 
   const breadcrumbItems = [
     { label: country.name, href: `/${country.slug}` },
     { label: city.name, href: `/${country.slug}/${city.slug}` },
   ];
 
-  const stats = [
+  const stats: Array<{ label: string; value: string; icon: React.ReactNode; extra?: React.ReactNode }> = [
     {
       label: 'Total Permits',
       value: totalPermits?.toLocaleString() ?? '--',
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
         </svg>
       ),
@@ -85,7 +90,7 @@ export default async function CityPage({ params }: Props) {
       label: 'Neighborhoods',
       value: neighborhoods?.length.toString() ?? '--',
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
         </svg>
@@ -97,7 +102,7 @@ export default async function CityPage({ params }: Props) {
         ? PERMIT_CATEGORIES[categoryStats[0].category] || categoryStats[0].category
         : '--',
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
         </svg>
       ),
@@ -106,10 +111,16 @@ export default async function CityPage({ params }: Props) {
       label: 'Data Source',
       value: city.apiSource,
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
         </svg>
       ),
+      extra: syncState?.lastSyncAt ? (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Updated {formatRelativeTime(syncState.lastSyncAt)}
+        </div>
+      ) : null,
     },
   ];
 
@@ -163,6 +174,7 @@ export default async function CityPage({ params }: Props) {
                   <p className="stat-value mt-0.5 truncate text-2xl font-bold text-foreground">
                     {stat.value}
                   </p>
+                  {stat.extra}
                 </div>
               </div>
             </CardContent>
@@ -266,7 +278,7 @@ export default async function CityPage({ params }: Props) {
         ) : (
           <div className="mt-6 rounded-xl border border-dashed border-border bg-card/50 p-12 text-center">
             <p className="text-muted-foreground">
-              Neighborhood data will appear here once the ETL pipeline runs.
+              No neighborhoods loaded yet. Building permit data for {city.name} is being imported — check back soon!
             </p>
           </div>
         )}
@@ -311,10 +323,21 @@ export default async function CityPage({ params }: Props) {
         ) : (
           <div className="mt-6 rounded-xl border border-dashed border-border bg-card/50 p-12 text-center">
             <p className="text-muted-foreground">
-              Recent permit data will appear here once the ETL pipeline runs.
+              No recent permits yet. Building permit data for {city.name} is being imported — check back soon!
             </p>
           </div>
         )}
+      </section>
+
+      {/* Display Ad */}
+      <AdSlot slot="city-leaderboard" format="horizontal" className="mx-auto mt-12 max-w-3xl" />
+
+      {/* Lead Capture CTA */}
+      <section className="mt-16 mx-auto max-w-xl">
+        <CTABanner
+          cityName={city.name}
+          citySlug={city.slug}
+        />
       </section>
     </div>
   );

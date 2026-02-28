@@ -12,6 +12,9 @@ const envSchema = z.object({
   ADMIN_EMAIL: z.string().email().optional(),
   NEXT_PUBLIC_GA_ID: z.string().optional(),
   NEXT_PUBLIC_PLAUSIBLE_DOMAIN: z.string().optional(),
+  STRIPE_SECRET_KEY: z.string().min(1).optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

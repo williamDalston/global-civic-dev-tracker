@@ -7,6 +7,8 @@ import { JsonLd, buildBreadcrumbJsonLd } from '@/components/seo/json-ld';
 import { COUNTRIES } from '@/lib/config/countries';
 import { getCitiesByCountry } from '@/lib/config/cities';
 import { SITE_URL } from '@/lib/config/constants';
+import { buildCountryMeta } from '@/lib/seo/meta';
+import { buildCountryHubSchema } from '@/lib/seo/structured-data';
 
 export const revalidate = 3600;
 
@@ -23,10 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const country = COUNTRIES.find((c) => c.slug === countrySlug);
   if (!country) return {};
 
-  return {
-    title: `Building Permits in ${country.name}`,
-    description: `Track building permits, zoning changes, and development activity across ${country.name}.`,
-  };
+  return buildCountryMeta(country.name, country.slug);
 }
 
 export default async function CountryPage({ params }: Props) {
@@ -45,6 +44,14 @@ export default async function CountryPage({ params }: Props) {
           { name: 'Home', url: SITE_URL },
           { name: country.name, url: `${SITE_URL}/${country.slug}` },
         ])}
+      />
+      <JsonLd
+        data={buildCountryHubSchema({
+          countryName: country.name,
+          url: `${SITE_URL}/${country.slug}`,
+          description: `Track building permits across ${cities.length} cities in ${country.name}.`,
+          cityCount: cities.length,
+        })}
       />
 
       <Breadcrumbs items={breadcrumbItems} />

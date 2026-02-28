@@ -39,6 +39,11 @@ export function buildCountryMeta(countryName: string, countrySlug: string): Meta
       siteName: SITE_NAME,
       type: 'website',
     },
+    twitter: {
+      card: 'summary_large_image' as const,
+      title,
+      description,
+    },
     alternates: { canonical: url },
   };
 }
@@ -64,6 +69,11 @@ export function buildCityMeta(
       url,
       siteName: SITE_NAME,
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+      title,
+      description,
     },
     alternates: { canonical: url },
   };
@@ -91,6 +101,11 @@ export function buildNeighborhoodMeta(
       url,
       siteName: SITE_NAME,
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+      title,
+      description,
     },
     alternates: { canonical: url },
   };
@@ -124,6 +139,11 @@ export function buildPermitMeta(options: {
       url,
       siteName: SITE_NAME,
       type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+      title,
+      description,
     },
     alternates: { canonical: url },
   };

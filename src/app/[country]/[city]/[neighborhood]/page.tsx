@@ -1,27 +1,32 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { JsonLd, buildBreadcrumbJsonLd } from '@/components/seo/json-ld';
 import { PermitCard } from '@/components/permits/permit-card';
+import { PermitFilters } from '@/components/permits/permit-filters';
 import { Pagination } from '@/components/ui/pagination';
 import { DynamicPermitMap } from '@/components/maps/dynamic-map';
+import { CTABanner } from '@/components/lead-generation/cta-banner';
+import { AdSlot } from '@/components/ads/ad-slot';
 import { COUNTRIES } from '@/lib/config/countries';
 import { CITIES } from '@/lib/config/cities';
-import { SITE_URL, PERMITS_PER_PAGE } from '@/lib/config/constants';
+import { SITE_URL, PERMITS_PER_PAGE, PERMIT_CATEGORIES } from '@/lib/config/constants';
 import { safeQuery } from '@/lib/db/safe-query';
 import { getCityBySlug } from '@/lib/db/queries/cities';
 import { getNeighborhoodBySlug } from '@/lib/db/queries/neighborhoods';
-import { getPermitsByNeighborhood, getPermitsWithCoordinatesByNeighborhood } from '@/lib/db/queries/permits';
+import { getPermitsByNeighborhood, getPermitsWithCoordinatesByNeighborhood, getNeighborhoodCategoryStats, getNeighborhoodAvgCost } from '@/lib/db/queries/permits';
 import { buildNeighborhoodMeta } from '@/lib/seo/meta';
 import { buildPlaceSchema } from '@/lib/seo/structured-data';
 import { getPagination } from '@/lib/utils/pagination';
+import { formatCurrency } from '@/lib/utils/format';
 
 export const revalidate = 900;
 
 interface Props {
   params: Promise<{ country: string; city: string; neighborhood: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; category?: string; q?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -46,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function NeighborhoodPage({ params, searchParams }: Props) {
   const { country: countrySlug, city: citySlug, neighborhood: neighborhoodSlug } = await params;
-  const { page: pageStr } = await searchParams;
+  const { page: pageStr, category, q } = await searchParams;
   const country = COUNTRIES.find((c) => c.slug === countrySlug);
   const city = CITIES.find((c) => c.slug === citySlug && c.countrySlug === countrySlug);
 
@@ -70,12 +75,22 @@ export default async function NeighborhoodPage({ params, searchParams }: Props) 
       .join(' ');
 
   const permitsResult = neighborhood
-    ? await safeQuery(() => getPermitsByNeighborhood(neighborhood.id, page, PERMITS_PER_PAGE))
+    ? await safeQuery(() => getPermitsByNeighborhood(neighborhood.id, page, PERMITS_PER_PAGE, {
+        category: category || undefined,
+        search: q || undefined,
+      }))
     : null;
 
   const permits = permitsResult?.items ?? [];
   const totalPermits = permitsResult?.total ?? 0;
   const pagination = getPagination(page, PERMITS_PER_PAGE, totalPermits);
+
+  const [categoryStats, avgCost] = neighborhood
+    ? await Promise.all([
+        safeQuery(() => getNeighborhoodCategoryStats(neighborhood.id)),
+        safeQuery(() => getNeighborhoodAvgCost(neighborhood.id)),
+      ])
+    : [null, null];
 
   const mapPermits = neighborhood
     ? await safeQuery(() => getPermitsWithCoordinatesByNeighborhood(neighborhood.id))
@@ -137,6 +152,38 @@ export default async function NeighborhoodPage({ params, searchParams }: Props) 
         </div>
       </div>
 
+      {/* Quick Stats */}
+      {neighborhood && (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="card-hover-lift">
+            <CardContent className="p-5">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Permits</p>
+              <p className="stat-value mt-1 text-2xl font-bold text-foreground">{totalPermits.toLocaleString()}</p>
+            </CardContent>
+          </Card>
+          <Card className="card-hover-lift">
+            <CardContent className="p-5">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Avg. Est. Cost</p>
+              <p className="stat-value mt-1 text-2xl font-bold text-foreground">{avgCost ? formatCurrency(avgCost) : '--'}</p>
+            </CardContent>
+          </Card>
+          <Card className="card-hover-lift">
+            <CardContent className="p-5">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Top Category</p>
+              <p className="stat-value mt-1 text-2xl font-bold text-foreground truncate">
+                {categoryStats?.[0] ? (PERMIT_CATEGORIES[categoryStats[0].category] || categoryStats[0].category) : '--'}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="card-hover-lift">
+            <CardContent className="p-5">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Categories</p>
+              <p className="stat-value mt-1 text-2xl font-bold text-foreground">{categoryStats?.length ?? '--'}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Permit Map */}
       {mapPermits && mapPermits.length > 0 ? (
         <div className="mt-8 overflow-hidden rounded-xl border border-border">
@@ -161,13 +208,20 @@ export default async function NeighborhoodPage({ params, searchParams }: Props) 
       ) : (
         <div className="mt-8 flex h-64 items-center justify-center rounded-xl border border-dashed border-border bg-card/50">
           <div className="text-center">
-            <svg className="mx-auto h-8 w-8 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <svg className="mx-auto h-8 w-8 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
             </svg>
             <p className="mt-2 text-muted-foreground">
               Map will appear once permits with coordinates are loaded.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      {categoryStats && categoryStats.length > 0 && (
+        <div className="mt-6">
+          <PermitFilters categories={categoryStats.map(s => s.category)} />
         </div>
       )}
 
@@ -221,10 +275,21 @@ export default async function NeighborhoodPage({ params, searchParams }: Props) 
         ) : (
           <div className="mt-6 rounded-xl border border-dashed border-border bg-card/50 p-12 text-center">
             <p className="text-muted-foreground">
-              Permit data will appear here once the ETL pipeline runs.
+              No permits found for {neighborhoodName} yet. Data is being imported from government sources — check back soon!
             </p>
           </div>
         )}
+      </section>
+
+      {/* Display Ad */}
+      <AdSlot slot="neighborhood-infeed" format="auto" className="mx-auto mt-8 max-w-2xl" />
+
+      {/* Lead Capture CTA */}
+      <section className="mt-12 mx-auto max-w-xl">
+        <CTABanner
+          cityName={city.name}
+          citySlug={city.slug}
+        />
       </section>
     </div>
   );

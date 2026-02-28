@@ -188,7 +188,7 @@ export default async function HomePage() {
                 description:
                   'We continuously ingest building permit data from government open data portals across 6 major cities worldwide — DC, NYC, Chicago, London, Sydney, and Toronto.',
                 icon: (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
                   </svg>
                 ),
@@ -199,7 +199,7 @@ export default async function HomePage() {
                 description:
                   'Every permit is mapped to its neighborhood, enriched with AI-generated analysis, and tracked for development trends over time.',
                 icon: (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
                   </svg>
                 ),
@@ -210,7 +210,7 @@ export default async function HomePage() {
                 description:
                   'Planning a renovation or new build? Get matched with verified local contractors who specialize in your type of project and neighborhood.',
                 icon: (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
                   </svg>
                 ),
@@ -253,20 +253,20 @@ export default async function HomePage() {
 
             <div className="relative">
               <h2 className="text-3xl font-bold text-foreground">
-                Ready to track development in your area?
+                Planning a Construction or Renovation Project?
               </h2>
-              <p className="mx-auto mt-4 max-w-md text-muted-foreground">
-                Browse permits by city, neighborhood, or project type. Free and
-                always up to date.
+              <p className="mx-auto mt-4 max-w-lg text-muted-foreground">
+                See what your neighbors are building, then get matched with verified
+                local contractors. Free quotes, no obligation.
               </p>
               <div className="mt-10 flex flex-wrap justify-center gap-3">
-                {CITIES.slice(0, 3).map((city) => (
+                {CITIES.map((city) => (
                   <Link
                     key={city.slug}
                     href={`/${city.countrySlug}/${city.slug}`}
-                    className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30"
+                    className="rounded-lg bg-cta px-6 py-2.5 text-sm font-semibold text-cta-foreground shadow-md shadow-cta/20 transition-all hover:bg-cta/90 hover:shadow-lg hover:shadow-cta/30"
                   >
-                    {city.name}
+                    Find Contractors in {city.name}
                   </Link>
                 ))}
                 <Link

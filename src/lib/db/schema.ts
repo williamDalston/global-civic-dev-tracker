@@ -204,3 +204,196 @@ export const sitemapTracking = pgTable(
     index('idx_sitemap_modified').on(table.lastModified),
   ]
 );
+
+// ============ CONTRACTORS ============
+export const contractors = pgTable(
+  'contractors',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    email: text('email').notNull().unique(),
+    passwordHash: text('password_hash').notNull(),
+    companyName: text('company_name').notNull(),
+    contactName: text('contact_name').notNull(),
+    phone: text('phone').notNull(),
+    website: text('website'),
+    description: text('description'),
+    logoUrl: text('logo_url'),
+    slug: text('slug').notNull().unique(),
+    licenseNumber: text('license_number'),
+    insuranceVerified: boolean('insurance_verified').default(false),
+    yearsInBusiness: integer('years_in_business'),
+    employeeCount: text('employee_count'),
+    status: text('status').default('pending'),
+    stripeCustomerId: text('stripe_customer_id'),
+    stripeSubscriptionId: text('stripe_subscription_id'),
+    billingPlan: text('billing_plan').default('per_lead'),
+    leadCredits: integer('lead_credits').default(0),
+    monthlyLeadLimit: integer('monthly_lead_limit'),
+    leadsThisMonth: integer('leads_this_month').default(0),
+    lastLeadResetAt: timestamp('last_lead_reset_at', { withTimezone: true }),
+    emailVerified: boolean('email_verified').default(false),
+    emailVerifyToken: text('email_verify_token'),
+    passwordResetToken: text('password_reset_token'),
+    passwordResetExpires: timestamp('password_reset_expires', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('idx_contractors_email').on(table.email),
+    index('idx_contractors_slug').on(table.slug),
+    index('idx_contractors_status').on(table.status),
+    index('idx_contractors_stripe').on(table.stripeCustomerId),
+  ]
+);
+
+export const contractorsRelations = relations(contractors, ({ many }) => ({
+  serviceAreas: many(contractorServiceAreas),
+  categories: many(contractorCategories),
+  leadAssignments: many(leadAssignments),
+}));
+
+// ============ CONTRACTOR SERVICE AREAS ============
+export const contractorServiceAreas = pgTable(
+  'contractor_service_areas',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    contractorId: bigint('contractor_id', { mode: 'number' })
+      .notNull()
+      .references(() => contractors.id, { onDelete: 'cascade' }),
+    cityId: integer('city_id')
+      .notNull()
+      .references(() => cities.id),
+    neighborhoodId: integer('neighborhood_id').references(() => neighborhoods.id),
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('idx_contractor_areas_contractor').on(table.contractorId),
+    index('idx_contractor_areas_city').on(table.cityId),
+    uniqueIndex('idx_contractor_areas_unique').on(
+      table.contractorId,
+      table.cityId,
+      table.neighborhoodId
+    ),
+  ]
+);
+
+export const contractorServiceAreasRelations = relations(contractorServiceAreas, ({ one }) => ({
+  contractor: one(contractors, {
+    fields: [contractorServiceAreas.contractorId],
+    references: [contractors.id],
+  }),
+  city: one(cities, {
+    fields: [contractorServiceAreas.cityId],
+    references: [cities.id],
+  }),
+  neighborhood: one(neighborhoods, {
+    fields: [contractorServiceAreas.neighborhoodId],
+    references: [neighborhoods.id],
+  }),
+}));
+
+// ============ CONTRACTOR CATEGORIES ============
+export const contractorCategories = pgTable(
+  'contractor_categories',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    contractorId: bigint('contractor_id', { mode: 'number' })
+      .notNull()
+      .references(() => contractors.id, { onDelete: 'cascade' }),
+    category: text('category').notNull(),
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('idx_contractor_cats_contractor').on(table.contractorId),
+    index('idx_contractor_cats_category').on(table.category),
+    uniqueIndex('idx_contractor_cats_unique').on(table.contractorId, table.category),
+  ]
+);
+
+export const contractorCategoriesRelations = relations(contractorCategories, ({ one }) => ({
+  contractor: one(contractors, {
+    fields: [contractorCategories.contractorId],
+    references: [contractors.id],
+  }),
+}));
+
+// ============ LEAD ASSIGNMENTS ============
+export const leadAssignments = pgTable(
+  'lead_assignments',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    leadId: bigint('lead_id', { mode: 'number' })
+      .notNull()
+      .references(() => leads.id),
+    contractorId: bigint('contractor_id', { mode: 'number' })
+      .notNull()
+      .references(() => contractors.id),
+    status: text('status').default('pending'),
+    priceCharged: numeric('price_charged', { precision: 10, scale: 2 }),
+    paidAt: timestamp('paid_at', { withTimezone: true }),
+    viewedAt: timestamp('viewed_at', { withTimezone: true }),
+    contactedAt: timestamp('contacted_at', { withTimezone: true }),
+    outcome: text('outcome'),
+    feedback: text('feedback'),
+    disputeReason: text('dispute_reason'),
+    disputeResolvedAt: timestamp('dispute_resolved_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('idx_lead_assignments_lead').on(table.leadId),
+    index('idx_lead_assignments_contractor').on(table.contractorId),
+    index('idx_lead_assignments_status').on(table.status),
+    uniqueIndex('idx_lead_assignments_unique').on(table.leadId, table.contractorId),
+  ]
+);
+
+export const leadAssignmentsRelations = relations(leadAssignments, ({ one }) => ({
+  lead: one(leads, {
+    fields: [leadAssignments.leadId],
+    references: [leads.id],
+  }),
+  contractor: one(contractors, {
+    fields: [leadAssignments.contractorId],
+    references: [contractors.id],
+  }),
+}));
+
+// ============ CONTRACTOR BILLING HISTORY ============
+export const contractorBillingHistory = pgTable(
+  'contractor_billing_history',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    contractorId: bigint('contractor_id', { mode: 'number' })
+      .notNull()
+      .references(() => contractors.id),
+    type: text('type').notNull(),
+    amount: numeric('amount', { precision: 10, scale: 2 }).notNull(),
+    description: text('description'),
+    stripePaymentIntentId: text('stripe_payment_intent_id'),
+    stripeInvoiceId: text('stripe_invoice_id'),
+    leadAssignmentId: bigint('lead_assignment_id', { mode: 'number' }).references(
+      () => leadAssignments.id
+    ),
+    status: text('status').default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('idx_billing_contractor').on(table.contractorId),
+    index('idx_billing_status').on(table.status),
+    index('idx_billing_created').on(table.createdAt),
+  ]
+);
+
+// ============ LEAD PRICING ============
+export const leadPricing = pgTable('lead_pricing', {
+  id: serial('id').primaryKey(),
+  cityId: integer('city_id').references(() => cities.id),
+  category: text('category').notNull(),
+  basePrice: numeric('base_price', { precision: 10, scale: 2 }).notNull(),
+  premiumMultiplier: numeric('premium_multiplier', { precision: 4, scale: 2 }).default('1.00'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});

@@ -4,6 +4,7 @@ import { getLeadsPaginated, getAllCities } from '@/lib/db/queries/admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LeadStatusSelect } from './lead-status-select';
+import { ExportCSVButton } from './export-csv-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,11 +33,14 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Leads</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {total.toLocaleString()} total lead{total !== 1 ? 's' : ''}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Leads</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {total.toLocaleString()} total lead{total !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <ExportCSVButton />
       </div>
 
       {/* Filters */}

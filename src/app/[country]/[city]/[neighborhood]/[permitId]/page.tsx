@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,16 +7,25 @@ import { Breadcrumbs } from '@/components/navigation/breadcrumbs';
 import { JsonLd, buildBreadcrumbJsonLd } from '@/components/seo/json-ld';
 import { PermitCard } from '@/components/permits/permit-card';
 import { CTABanner } from '@/components/lead-generation/cta-banner';
+import { AdSlot } from '@/components/ads/ad-slot';
 import { DynamicPermitMap } from '@/components/maps/dynamic-map';
 import { COUNTRIES } from '@/lib/config/countries';
 import { CITIES } from '@/lib/config/cities';
 import { SITE_URL, PERMIT_CATEGORIES, PERMIT_STATUSES } from '@/lib/config/constants';
 import { safeQuery } from '@/lib/db/safe-query';
 import { getCityBySlug } from '@/lib/db/queries/cities';
+import { getNeighborhoodBySlug } from '@/lib/db/queries/neighborhoods';
 import { getPermitBySlug, getRelatedPermits } from '@/lib/db/queries/permits';
 import { buildPermitMeta } from '@/lib/seo/meta';
 import { buildPermitSchema } from '@/lib/seo/structured-data';
 import { formatDate, formatCurrency } from '@/lib/utils/format';
+
+function slugToName(slug: string): string {
+  return slug
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
 
 export const revalidate = 86400;
 
@@ -33,18 +43,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const city = CITIES.find((c) => c.slug === citySlug && c.countrySlug === countrySlug);
   if (!city) return {};
 
-  const neighborhoodName = neighborhoodSlug
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
-
   // Resolve city ID from DB for permit lookup
   const dbCity = await safeQuery(() => getCityBySlug(citySlug));
   const cityId = dbCity?.id ?? null;
 
+  const dbNeighborhood = cityId
+    ? await safeQuery(() => getNeighborhoodBySlug(cityId, neighborhoodSlug))
+    : null;
+  const neighborhoodName = dbNeighborhood?.name ?? slugToName(neighborhoodSlug);
+
   const permit = cityId ? await safeQuery(() => getPermitBySlug(cityId, permitId)) : null;
   if (permit) {
-    return buildPermitMeta({
+    const meta = buildPermitMeta({
       permitId: permit.globalPermitId,
       address: permit.propertyAddress,
       category: permit.permitCategory,
@@ -56,6 +66,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       permitSlug: permit.slug,
       workDescription: permit.workDescription,
     });
+    if (permit.noindex) {
+      meta.robots = { index: false, follow: true };
+    }
+    return meta;
   }
 
   return {
@@ -83,10 +97,10 @@ export default async function PermitDetailPage({ params }: Props) {
   const permit = cityId ? await safeQuery(() => getPermitBySlug(cityId, permitId)) : null;
 
   // Use DB neighborhood name if we can resolve it, otherwise reconstruct from slug
-  const neighborhoodName = neighborhoodSlug
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  const dbNeighborhood = cityId
+    ? await safeQuery(() => getNeighborhoodBySlug(cityId, neighborhoodSlug))
+    : null;
+  const neighborhoodName = dbNeighborhood?.name ?? slugToName(neighborhoodSlug);
 
   const relatedPermits = permit?.neighborhoodId
     ? await safeQuery(() =>
@@ -117,7 +131,7 @@ export default async function PermitDetailPage({ params }: Props) {
   const cost = permit?.estimatedCost ? parseFloat(permit.estimatedCost) : null;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 pb-20 sm:px-6 lg:px-8 lg:pb-8">
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: 'Home', url: SITE_URL },
@@ -153,6 +167,15 @@ export default async function PermitDetailPage({ params }: Props) {
       )}
 
       <Breadcrumbs items={breadcrumbItems} />
+
+      <div className="mb-4">
+        <Link
+          href={`/${countrySlug}/${citySlug}/${neighborhoodSlug}`}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          &larr; All permits in {neighborhoodName}
+        </Link>
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -251,7 +274,7 @@ export default async function PermitDetailPage({ params }: Props) {
           ) : (
             <div className="mt-6 flex h-48 items-center justify-center rounded-xl border border-dashed border-border bg-card/50">
               <div className="text-center">
-                <svg className="mx-auto h-8 w-8 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <svg className="mx-auto h-8 w-8 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                 </svg>
@@ -263,7 +286,7 @@ export default async function PermitDetailPage({ params }: Props) {
           {/* AI Narrative */}
           <section className="mt-10">
             <div className="flex items-center gap-3">
-              <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
               </svg>
               <h2 className="text-xl font-bold text-foreground">Development Analysis</h2>
@@ -279,11 +302,11 @@ export default async function PermitDetailPage({ params }: Props) {
                 </div>
               ) : (
                 <div className="py-4 text-center">
-                  <svg className="mx-auto h-8 w-8 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <svg className="mx-auto h-8 w-8 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
                   </svg>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    AI-generated analysis will appear here once the content pipeline processes this permit.
+                    AI analysis for this permit is being generated. Check back soon!
                   </p>
                 </div>
               )}
@@ -342,7 +365,7 @@ export default async function PermitDetailPage({ params }: Props) {
               ) : (
                 <div className="p-8 text-center">
                   <p className="text-muted-foreground">
-                    Detailed permit information will appear here once data is ingested.
+                    Detailed permit information is being imported. Check back soon!
                   </p>
                 </div>
               )}
@@ -352,7 +375,9 @@ export default async function PermitDetailPage({ params }: Props) {
 
         {/* Sidebar */}
         <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-          <CTABanner permitCategory={permit?.permitCategory} cityName={city.name} citySlug={city.slug} />
+          <CTABanner id="lead-form" permitCategory={permit?.permitCategory} cityName={city.name} citySlug={city.slug} permitId={permit?.id} />
+
+          <AdSlot slot="sidebar-permit" format="vertical" className="hidden lg:block" />
 
           {/* Related Permits */}
           <div>
@@ -385,12 +410,22 @@ export default async function PermitDetailPage({ params }: Props) {
             ) : (
               <div className="mt-4 rounded-xl border border-dashed border-border bg-card/50 p-6 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Similar permits in this area will appear here.
+                  No similar permits found in this area yet.
                 </p>
               </div>
             )}
           </div>
         </div>
+      </div>
+
+      {/* Sticky mobile CTA */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 backdrop-blur-sm lg:hidden">
+        <a
+          href="#lead-form"
+          className="flex h-12 w-full items-center justify-center rounded-lg bg-cta text-sm font-bold text-cta-foreground shadow-lg shadow-cta/20 transition-colors hover:bg-cta/90"
+        >
+          Get Free Quotes for This Project
+        </a>
       </div>
     </div>
   );

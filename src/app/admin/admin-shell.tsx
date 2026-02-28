@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils/cn';
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboardIcon },
   { href: '/admin/leads', label: 'Leads', icon: UsersIcon },
+  { href: '/admin/contractors', label: 'Contractors', icon: HardHatIcon },
   { href: '/admin/etl', label: 'ETL Status', icon: RefreshIcon },
 ];
 
@@ -159,6 +160,26 @@ function LogOutIcon({ className }: { className?: string }) {
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
       <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+function HardHatIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z" />
+      <path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" />
+      <path d="M4 15v-3a6 6 0 0 1 6-6h0" />
+      <path d="M14 6h0a6 6 0 0 1 6 6v3" />
     </svg>
   );
 }

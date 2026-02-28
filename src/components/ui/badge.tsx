@@ -9,9 +9,9 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 const variantClasses: Record<BadgeVariant, string> = {
   default: 'bg-primary text-primary-foreground',
   secondary: 'bg-secondary text-secondary-foreground',
-  success: 'bg-success/20 text-success border-success/30',
-  warning: 'bg-warning/20 text-warning border-warning/30',
-  destructive: 'bg-destructive/20 text-destructive border-destructive/30',
+  success: 'bg-success/15 text-success border-success/40',
+  warning: 'bg-warning/15 text-warning border-warning/40',
+  destructive: 'bg-destructive/15 text-destructive border-destructive/40',
   outline: 'border border-border text-foreground',
 };
 

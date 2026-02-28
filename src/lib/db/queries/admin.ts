@@ -110,6 +110,17 @@ export async function getTotalPermitsCount() {
   return result[0]?.count ?? 0;
 }
 
+// ─── City Sync State (for freshness indicator) ──────────────
+
+export async function getCitySyncState(cityId: number) {
+  const result = await db
+    .select()
+    .from(etlSyncState)
+    .where(eq(etlSyncState.cityId, cityId))
+    .limit(1);
+  return result[0] ?? null;
+}
+
 // ─── All Cities (for filter dropdowns) ───────────────────────
 
 export async function getAllCities() {

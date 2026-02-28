@@ -162,3 +162,26 @@ export function buildCityHubSchema(options: {
     }),
   };
 }
+
+export function buildCountryHubSchema(options: {
+  countryName: string;
+  url: string;
+  description: string;
+  cityCount: number;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `Building Permits in ${options.countryName}`,
+    description: options.description,
+    url: options.url,
+    about: {
+      '@type': 'Country',
+      name: options.countryName,
+    },
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: options.cityCount,
+    },
+  };
+}

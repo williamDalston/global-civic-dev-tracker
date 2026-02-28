@@ -42,6 +42,7 @@ export function Pagination({ currentPage, totalPages, baseUrl }: PaginationProps
 
   return (
     <nav aria-label="Pagination" className="flex items-center justify-center gap-1">
+      <p className="sr-only">Page {currentPage} of {totalPages}</p>
       {currentPage > 1 && (
         <Link
           href={pageUrl(currentPage - 1)}

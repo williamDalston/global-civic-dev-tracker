@@ -32,6 +32,30 @@ function getClientIp(request: NextRequest): string {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // ─── URL normalization (SEO) ─────────────────────────────
+  // Skip static assets and API routes for normalization
+  if (!pathname.startsWith('/_next') && !pathname.startsWith('/api') && !pathname.includes('.')) {
+    let normalized = pathname;
+
+    // Remove trailing slash (except root)
+    if (normalized.length > 1 && normalized.endsWith('/')) {
+      normalized = normalized.replace(/\/+$/, '');
+    }
+
+    // Lowercase enforcement
+    const lowered = normalized.toLowerCase();
+    if (lowered !== normalized) {
+      normalized = lowered;
+    }
+
+    // 301 redirect if changed
+    if (normalized !== pathname) {
+      const url = request.nextUrl.clone();
+      url.pathname = normalized;
+      return NextResponse.redirect(url, 301);
+    }
+  }
+
   // ─── Admin route protection ────────────────────────────────
   // Allow the login page and auth API without a session
   if (
@@ -89,5 +113,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*', '/admin/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

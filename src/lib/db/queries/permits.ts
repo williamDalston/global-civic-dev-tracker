@@ -1,4 +1,4 @@
-import { eq, and, desc, count, sql } from 'drizzle-orm';
+import { eq, and, desc, count, sql, ilike } from 'drizzle-orm';
 import { db } from '..';
 import { permits, neighborhoods } from '../schema';
 
@@ -14,21 +14,37 @@ export async function getPermitBySlug(cityId: number, slug: string) {
 export async function getPermitsByNeighborhood(
   neighborhoodId: number,
   page: number = 1,
-  pageSize: number = 24
+  pageSize: number = 24,
+  filters?: { category?: string; search?: string }
 ) {
   const offset = (page - 1) * pageSize;
+
+  const conditions = [
+    eq(permits.neighborhoodId, neighborhoodId),
+    eq(permits.noindex, false),
+  ];
+
+  if (filters?.category) {
+    conditions.push(eq(permits.permitCategory, filters.category));
+  }
+  if (filters?.search) {
+    conditions.push(ilike(permits.propertyAddress, `%${filters.search}%`));
+  }
+
+  const whereClause = and(...conditions);
+
   const [items, totalResult] = await Promise.all([
     db
       .select()
       .from(permits)
-      .where(and(eq(permits.neighborhoodId, neighborhoodId), eq(permits.noindex, false)))
+      .where(whereClause)
       .orderBy(desc(permits.issueDate))
       .limit(pageSize)
       .offset(offset),
     db
       .select({ count: count() })
       .from(permits)
-      .where(and(eq(permits.neighborhoodId, neighborhoodId), eq(permits.noindex, false))),
+      .where(whereClause),
   ]);
   return { items, total: totalResult[0]?.count ?? 0 };
 }
@@ -205,4 +221,32 @@ export async function getTotalPermitCount() {
     .from(permits)
     .where(eq(permits.noindex, false));
   return result[0]?.count ?? 0;
+}
+
+export async function getNeighborhoodCategoryStats(neighborhoodId: number) {
+  return db
+    .select({
+      category: permits.permitCategory,
+      count: count(),
+    })
+    .from(permits)
+    .where(and(eq(permits.neighborhoodId, neighborhoodId), eq(permits.noindex, false)))
+    .groupBy(permits.permitCategory)
+    .orderBy(desc(count()));
+}
+
+export async function getNeighborhoodAvgCost(neighborhoodId: number) {
+  const result = await db
+    .select({
+      avgCost: sql<string>`ROUND(AVG(${permits.estimatedCost}::numeric), 0)`,
+    })
+    .from(permits)
+    .where(
+      and(
+        eq(permits.neighborhoodId, neighborhoodId),
+        eq(permits.noindex, false),
+        sql`${permits.estimatedCost} IS NOT NULL AND ${permits.estimatedCost}::numeric > 0`
+      )
+    );
+  return result[0]?.avgCost ? parseInt(result[0].avgCost) : null;
 }

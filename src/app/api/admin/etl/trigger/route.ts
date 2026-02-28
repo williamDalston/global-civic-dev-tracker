@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { runFullETL } from '@/lib/etl/pipeline';
+import { runPostETLHooks } from '@/lib/etl/post-run';
 
 export const maxDuration = 300;
 
@@ -11,6 +12,11 @@ export const maxDuration = 300;
 export async function POST() {
   try {
     const results = await runFullETL();
+
+    // Fire-and-forget post-ETL hooks (IndexNow, ISR revalidation, narrative generation)
+    runPostETLHooks(results).catch((err) =>
+      console.error('[admin/etl] Post-run hooks failed:', err)
+    );
 
     const summary = results.map((r) => ({
       city: r.citySlug,

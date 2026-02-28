@@ -17,6 +17,7 @@ interface FormErrors {
   name?: string;
   email?: string;
   phone?: string;
+  consent?: string;
 }
 
 export function LeadForm({ permitId, workType, citySlug, sourceUrl, onSuccess }: LeadFormProps) {
@@ -24,6 +25,7 @@ export function LeadForm({ permitId, workType, citySlug, sourceUrl, onSuccess }:
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState('');
+  const [consent, setConsent] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,6 +47,7 @@ export function LeadForm({ permitId, workType, citySlug, sourceUrl, onSuccess }:
     if (!name) newErrors.name = 'Name is required';
     if (!email) newErrors.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Invalid email address';
+    if (!consent) newErrors.consent = 'You must agree to be contacted';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -65,6 +68,7 @@ export function LeadForm({ permitId, workType, citySlug, sourceUrl, onSuccess }:
           workType,
           permitId,
           citySlug,
+          consent,
           sourceUrl: sourceUrl || window.location.href,
           utmSource: new URLSearchParams(window.location.search).get('utm_source') || undefined,
           utmMedium: new URLSearchParams(window.location.search).get('utm_medium') || undefined,
@@ -146,17 +150,39 @@ export function LeadForm({ permitId, workType, citySlug, sourceUrl, onSuccess }:
       {/* Honeypot */}
       <input type="text" name="website" className="hidden" tabIndex={-1} autoComplete="off" />
 
+      {/* Consent checkbox — required for GDPR/CCPA compliance */}
+      <div className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          id="lead-consent"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          className="mt-1 h-4 w-4 rounded border-border bg-card accent-cta"
+        />
+        <label htmlFor="lead-consent" className="text-xs text-muted-foreground">
+          I agree to be contacted by local contractors about my project and have read the{' '}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+            Privacy Policy
+          </a>.
+        </label>
+      </div>
+      {errors.consent && (
+        <p className="text-xs text-destructive">{errors.consent}</p>
+      )}
+
       {serverError && (
         <p className="text-sm text-destructive">{serverError}</p>
       )}
 
-      <Button type="submit" className="w-full" disabled={submitting}>
+      <Button type="submit" className={`w-full bg-cta text-cta-foreground shadow-lg shadow-cta/20 hover:bg-cta/90${submitting ? ' opacity-70' : ''}`} disabled={submitting}>
+        {submitting && (
+          <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+        )}
         {submitting ? 'Submitting...' : 'Get Free Quotes'}
       </Button>
-
-      <p className="text-center text-xs text-muted-foreground">
-        By submitting, you agree to be contacted by local contractors.
-      </p>
     </form>
   );
 }

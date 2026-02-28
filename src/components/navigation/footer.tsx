@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { SITE_NAME } from '@/lib/config/constants';
 import { CITIES } from '@/lib/config/cities';
+import { COUNTRIES } from '@/lib/config/countries';
 
 export function Footer() {
   return (
@@ -41,46 +42,40 @@ export function Footer() {
           </div>
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Countries
+            </h3>
+            <ul className="mt-4 space-y-2.5">
+              {COUNTRIES.map((country) => (
+                <li key={country.slug}>
+                  <Link
+                    href={`/${country.slug}`}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {country.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Resources
             </h3>
             <ul className="mt-4 space-y-2.5">
               <li>
                 <Link
-                  href="/about"
+                  href="/"
                   className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  About
+                  Browse Permits
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/api"
+                  href="/privacy"
                   className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  API Access
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              For Contractors
-            </h3>
-            <ul className="mt-4 space-y-2.5">
-              <li>
-                <Link
-                  href="/contractors"
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Get Listed
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/leads"
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Lead Program
+                  Data &amp; Privacy
                 </Link>
               </li>
             </ul>

@@ -42,6 +42,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  trailingSlash: false,
   logging: {
     fetches: {
       fullUrl: true,
